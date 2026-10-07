@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escape the Angle Vault</title>
+<style>
+:root{
+  --bg1:#1b1033;--bg2:#0f1724;--card:#241840;--card2:#2c1d4d;
+  --gold:#f5c84c;--teal:#36d1c4;--text:#f3eefc;--muted:#b9a9d9;
+  --ok:#5fd68a;--bad:#ff6b6b;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg1:#eef0ff;--bg2:#fbf4ff;--card:#ffffff;--card2:#f3edff;
+    --gold:#b8860b;--teal:#0e8f86;--text:#241840;--muted:#5a4b7a;
+    --ok:#1f9d57;--bad:#d1443d;
+  }
+}
+:root[data-theme="dark"]{
+  --bg1:#1b1033;--bg2:#0f1724;--card:#241840;--card2:#2c1d4d;
+  --gold:#f5c84c;--teal:#36d1c4;--text:#f3eefc;--muted:#b9a9d9;
+  --ok:#5fd68a;--bad:#ff6b6b;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  color:var(--text);
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  min-height:100%;
+}
+.wrap{max-width:640px;margin:0 auto;padding:28px 20px 50px;}
+h1{font-size:28px;margin:0 0 6px;text-align:center;}
+.sub{text-align:center;color:var(--muted);margin:0 0 22px;font-size:15px;}
+.locks{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 10px;margin-bottom:22px;}
+.lock{font-size:19px;opacity:.35;transition:all .3s;}
+.lock.done{opacity:1;filter:drop-shadow(0 0 6px var(--gold));}
+.lock.active{opacity:1;transform:scale(1.15);}
+.card{
+  background:var(--card);border-radius:18px;padding:24px 22px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);margin-bottom:16px;
+}
+.vault-title{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;margin-bottom:4px;}
+.vault-desc{color:var(--muted);font-size:14px;margin-bottom:18px;}
+.q{background:var(--card2);border-radius:14px;padding:16px 16px;margin-bottom:14px;}
+.q-prompt{font-size:15.5px;line-height:1.5;margin-bottom:12px;}
+.q input[type=text]{
+  width:100%;padding:11px 14px;border-radius:10px;border:2px solid var(--muted);
+  background:transparent;color:var(--text);font-size:16px;
+}
+.q input[type=text]:focus{outline:none;border-color:var(--teal);}
+.mc-row{display:flex;flex-direction:column;gap:8px;}
+.mc-btn{
+  padding:10px 14px;border-radius:10px;border:2px solid var(--muted);
+  background:transparent;color:var(--text);font-size:14.5px;text-align:left;cursor:pointer;
+}
+.mc-btn:hover{border-color:var(--teal);}
+.mc-btn.sel{border-color:var(--teal);background:rgba(54,209,196,.12);}
+.check-btn{
+  margin-top:10px;padding:9px 16px;border-radius:10px;border:none;
+  background:var(--teal);color:#06231f;font-weight:700;cursor:pointer;font-size:14px;
+}
+.check-btn:active{transform:scale(.97);}
+.fb{margin-top:8px;font-size:13.5px;font-weight:700;min-height:18px;}
+.fb.ok{color:var(--ok);}
+.fb.bad{color:var(--bad);}
+.hint-btn{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:12.5px;cursor:pointer;padding:0;margin-top:6px;}
+.hint-text{font-size:13px;color:var(--muted);margin-top:6px;display:none;}
+.continue-btn,.start-btn,.restart-btn{
+  display:block;width:100%;padding:14px;border-radius:12px;border:none;
+  background:var(--gold);color:#2a1e00;font-weight:800;font-size:16px;cursor:pointer;margin-top:6px;
+}
+.continue-btn:disabled{opacity:.35;cursor:not-allowed;}
+.center{text-align:center;}
+.big-emoji{font-size:54px;margin:6px 0;}
+.timer{color:var(--muted);font-size:13px;margin-top:4px;}
+.hidden{display:none;}
+.confetti{position:fixed;top:-20px;font-size:22px;animation:fall linear forwards;}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.2;}}
+.best{color:var(--gold);font-weight:700;}
+.bonus-tag{display:inline-block;background:var(--teal);color:#06231f;font-size:11px;font-weight:800;padding:2px 8px;border-radius:8px;margin-left:8px;}
+.qlevel{display:inline-block;background:var(--gold);color:#2a1e00;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:7px;margin-bottom:8px;}
+.qsvg{display:flex;justify-content:center;margin-bottom:10px;}
+.qsvg svg{max-width:100%;height:auto;}
+.name-input{width:100%;padding:11px 14px;border-radius:10px;border:2px solid var(--muted);background:transparent;color:var(--text);font-size:15px;margin:10px 0 2px;}
+.prize{background:linear-gradient(135deg,var(--gold),#ffe9a8);color:#2a1e00;border-radius:16px;padding:18px;margin:16px 0;font-weight:800;font-size:16px;}
+.progress-label{text-align:center;color:var(--muted);font-size:12.5px;margin:-10px 0 16px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+function svgTriangle(a,b,c,ext){
+  const Ax=30,Ay=130,Bx=190,By=130,Cx=110,Cy=30;
+  let extBits='';
+  if(ext){
+    const Ex=235,Ey=130;
+    extBits=`<line x1="${Bx}" y1="${By}" x2="${Ex}" y2="${Ey}" stroke="var(--muted)" stroke-width="2"/>
+    <text x="${(Bx+Ex)/2+4}" y="${By-10}" font-size="13" fill="var(--gold)" font-weight="700" text-anchor="middle">${ext}</text>`;
+  }
+  return `<svg width="${ext?250:210}" height="150" viewBox="0 0 ${ext?250:210} 150" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" fill="none" stroke="var(--teal)" stroke-width="2.5"/>
+    ${extBits}
+    <text x="${Ax+20}" y="${Ay-8}" font-size="13" fill="var(--text)" font-weight="700" text-anchor="middle">${a}</text>
+    <text x="${Bx-20}" y="${By-8}" font-size="13" fill="var(--text)" font-weight="700" text-anchor="middle">${b}</text>
+    <text x="${Cx}" y="${Cy+22}" font-size="13" fill="var(--text)" font-weight="700" text-anchor="middle">${c}</text>
+  </svg>`;
+}
+
+function svgTransversal(items){
+  const y1=42,y2=108,xL=16,xR=204,tx1=168,ty1=10,tx2=62,ty2=140;
+  function ix(y){ return tx1 + (tx2-tx1)*(y-ty1)/(ty2-ty1); }
+  const ix1=ix(y1), ix2=ix(y2);
+  const pos={1:[ix1-30,y1-8],2:[ix1+12,y1-8],3:[ix1+14,y1+22],4:[ix1-32,y1+22],
+             5:[ix2-30,y2-8],6:[ix2+12,y2-8],7:[ix2+14,y2+22],8:[ix2-32,y2+22]};
+  let txt='';
+  (items||[]).forEach(it=>{
+    const p=pos[it.slot];
+    txt+=`<text x="${p[0]}" y="${p[1]}" font-size="13" fill="${it.color||'var(--text)'}" font-weight="700">${it.text}</text>`;
+  });
+  return `<svg width="210" height="150" viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">
+    <line x1="${xL}" y1="${y1}" x2="${xR}" y2="${y1}" stroke="var(--teal)" stroke-width="2.3"/>
+    <line x1="${xL}" y1="${y2}" x2="${xR}" y2="${y2}" stroke="var(--teal)" stroke-width="2.3"/>
+    <line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="var(--teal)" stroke-width="2.3"/>
+    <polygon points="${xR-10},${y1-4} ${xR},${y1} ${xR-10},${y1+4}" fill="var(--teal)"/>
+    <polygon points="${xR-10},${y2-4} ${xR},${y2} ${xR-10},${y2+4}" fill="var(--teal)"/>
+    ${txt}
+  </svg>`;
+}
+
+function svgPolygon(n, caption){
+  const cx=105,cy=78,r=54;
+  let pts=[];
+  for(let i=0;i<n;i++){
+    const ang=-Math.PI/2+i*2*Math.PI/n;
+    pts.push((cx+r*Math.cos(ang)).toFixed(1)+','+(cy+r*Math.sin(ang)).toFixed(1));
+  }
+  return `<svg width="190" height="150" viewBox="0 0 210 150" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="${pts.join(' ')}" fill="none" stroke="var(--teal)" stroke-width="2.5"/>
+    <text x="105" y="140" font-size="12.5" fill="var(--muted)" text-anchor="middle">${caption||''}</text>
+  </svg>`;
+}
+
+function svgApex(apexVal, baseVal, askLabel){
+  const A=[115,22],B=[40,134],C=[190,134],D=[73.75,83.5],E=[156.25,83.5];
+  return `<svg width="260" height="155" viewBox="0 0 260 155" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="${A[0]},${A[1]} ${B[0]},${B[1]} ${C[0]},${C[1]}" fill="none" stroke="var(--teal)" stroke-width="2.5"/>
+    <line x1="${D[0]}" y1="${D[1]}" x2="${E[0]}" y2="${E[1]}" stroke="var(--gold)" stroke-width="2.3"/>
+    <text x="${A[0]}" y="${A[1]-8}" font-size="12.5" fill="var(--text)" font-weight="700" text-anchor="middle">${apexVal}</text>
+    <text x="${B[0]+10}" y="${B[1]-10}" font-size="12.5" fill="var(--text)" font-weight="700">${baseVal}</text>
+    <text x="${D[0]-14}" y="${D[1]+5}" font-size="11" fill="var(--muted)">D</text>
+    <text x="${E[0]+16}" y="${D[1]-4}" font-size="13" fill="var(--gold)" font-weight="700">${askLabel||''}</text>
+    <text x="${E[0]+5}" y="${E[1]+5}" font-size="11" fill="var(--muted)">E</text>
+    <text x="${B[0]-14}" y="${B[1]+16}" font-size="11" fill="var(--muted)">B</text>
+    <text x="${C[0]+6}" y="${C[1]+16}" font-size="11" fill="var(--muted)">C</text>
+    <text x="${A[0]}" y="${A[1]-20}" font-size="11" fill="var(--muted)" text-anchor="middle">A</text>
+  </svg>`;
+}
+
+const VAULTS = [
+  {id:'v1', emoji:'🔺', title:'Vault 1 · Triangle Angle Sum',
+   desc:'Crack it using the triangle angle sum (they always add to 180°).',
+   qs:[
+     {t:'num', lvl:'2.0', p:'A triangle has angles 54° and 78°. What is the third angle?', a:48,
+      svg:svgTriangle('54°','78°','?')},
+     {t:'num', lvl:'2.0', p:'A triangle has angles 90° and 35°. What is the third angle?', a:55,
+      svg:svgTriangle('90°','35°','?')},
+     {t:'num', lvl:'2.5', p:'A triangle has one angle of 40°. The other two angles are equal to each other. What is the measure of EACH of those two angles?', a:70,
+      hint:'180 − 40 = 140, then split that evenly between the two equal angles.',
+      svg:svgTriangle('?','?','40°')}
+   ]},
+  {id:'v2', emoji:'➕', title:'Vault 2 · Triangle Angles (Algebra)',
+   desc:'Crack it by setting up an equation that adds to 180°.',
+   qs:[
+     {t:'num', lvl:'2.5', p:"A triangle's angles are 90°, x, and (x + 10). What does x equal?", a:40,
+      hint:'90 + x + (x + 10) = 180. Combine like terms, then solve for x.',
+      svg:svgTriangle('90°','x','x+10')},
+     {t:'num', lvl:'2.5', p:"A triangle's angles are 2x, 3x, and 4x. What does x equal?", a:20,
+      hint:'2x + 3x + 4x = 180. Combine the x-terms first.',
+      svg:svgTriangle('2x','3x','4x')},
+     {t:'num', lvl:'3.0', p:'Two angles of a triangle are equal. The third angle is 20° more than twice one of the equal angles. What is the measure of the third (different) angle?', a:100,
+      hint:'Let x = each equal angle. The third angle is (2x + 20). Solve x + x + (2x+20) = 180, then find 2x+20.'}
+   ]},
+  {id:'v3', emoji:'↗️', title:'Vault 3 · Exterior Angle Theorem',
+   desc:'Crack it using the exterior angle theorem.',
+   qs:[
+     {t:'num', lvl:'2.0', p:'A triangle has two interior angles of 48° and 81°. What is the exterior angle at the third vertex?', a:129,
+      hint:'An exterior angle equals the sum of the two remote (non-adjacent) interior angles.',
+      svg:svgTriangle('48°','',  '81°','?')},
+     {t:'num', lvl:'2.5', p:'An exterior angle measures 130°. One of the remote interior angles is 55°. What is the other remote interior angle?', a:75,
+      hint:'The two remote interior angles add up to the exterior angle: 130 = 55 + ?',
+      svg:svgTriangle('55°','','?','130°')},
+     {t:'num', lvl:'3.0', p:'An exterior angle measures (3x + 10)°. Its two remote interior angles measure 40° and (x + 20)°. What does x equal?', a:25,
+      hint:'Exterior angle = sum of remote interior angles: 3x + 10 = 40 + (x + 20).',
+      svg:svgTriangle('40°','','x+20','3x+10')}
+   ]},
+  {id:'v4', emoji:'📐', title:'Vault 4 · Corresponding & Alternate Angles',
+   desc:'Crack it using parallel lines cut by a transversal.',
+   qs:[
+     {t:'num', lvl:'2.0', p:'Two parallel lines are cut by a transversal. One angle measures 115°. What is the measure of its corresponding angle?', a:115,
+      svg:svgTransversal([{slot:1,text:'115°'},{slot:5,text:'?',color:'var(--gold)'}])},
+     {t:'num', lvl:'2.0', p:'Using that same transversal, what is the measure of the alternate interior angle to a 72° angle?', a:72,
+      svg:svgTransversal([{slot:4,text:'72°'},{slot:6,text:'?',color:'var(--gold)'}])},
+     {t:'num', lvl:'2.5', p:'One angle is (2x + 5)°, and its corresponding angle measures 75°. What does x equal?', a:35,
+      hint:'Corresponding angles are equal: 2x + 5 = 75.',
+      svg:svgTransversal([{slot:1,text:'2x+5'},{slot:5,text:'75°'}])}
+   ]},
+  {id:'v5', emoji:'🤝', title:'Vault 5 · Co-Interior Angles',
+   desc:'Crack it using same-side (co-interior) angles — they are supplementary.',
+   qs:[
+     {t:'num', lvl:'2.0', p:'Two parallel lines are cut by a transversal. What is the co-interior (same-side interior) angle to a 115° angle?', a:65,
+      hint:'Co-interior angles add up to 180°.',
+      svg:svgTransversal([{slot:4,text:'115°'},{slot:5,text:'?',color:'var(--gold)'}])},
+     {t:'num', lvl:'2.0', p:'What is the co-interior angle to a 98° angle?', a:82,
+      hint:'180 − 98 = ?',
+      svg:svgTransversal([{slot:4,text:'98°'},{slot:5,text:'?',color:'var(--gold)'}])},
+     {t:'num', lvl:'2.5', p:'Two co-interior angles measure (4x)° and (2x + 30)°. What does x equal?', a:25,
+      hint:'Co-interior angles add to 180°: 4x + (2x + 30) = 180.',
+      svg:svgTransversal([{slot:4,text:'4x'},{slot:5,text:'2x+30'}])}
+   ]},
+  {id:'v6', emoji:'🧮', title:'Vault 6 · Transversal Algebra',
+   desc:'Crack it by writing an equation from the angle relationship.',
+   qs:[
+     {t:'num', lvl:'2.5', p:'Two corresponding angles measure (3x + 10)° and 70°. What does x equal?', a:20,
+      hint:'Corresponding angles are equal: 3x + 10 = 70.',
+      svg:svgTransversal([{slot:1,text:'3x+10'},{slot:5,text:'70°'}])},
+     {t:'num', lvl:'3.0', p:'Two co-interior angles measure (2x)° and (x + 30)°. What does x equal?', a:50,
+      hint:'Co-interior angles add to 180°: 2x + (x + 30) = 180.',
+      svg:svgTransversal([{slot:4,text:'2x'},{slot:5,text:'x+30'}])},
+     {t:'num', lvl:'3.0', p:'One angle is (5x − 15)°, and its alternate interior angle is (3x + 21)°. What does x equal?', a:18,
+      hint:'Alternate interior angles are equal: 5x − 15 = 3x + 21.',
+      svg:svgTransversal([{slot:4,text:'5x−15'},{slot:6,text:'3x+21'}])}
+   ]},
+  {id:'v7', emoji:'⬡', title:'Vault 7 · Polygon Interior Angle Sum',
+   desc:'Crack it using the polygon interior angle sum formula.',
+   qs:[
+     {t:'num', lvl:'2.0', p:'What is the sum of the interior angles of a hexagon (6 sides)?', a:720,
+      hint:'Interior angle sum = (n − 2) × 180°',
+      svg:svgPolygon(6,'hexagon · 6 sides')},
+     {t:'num', lvl:'2.0', p:'What is the sum of the interior angles of an octagon (8 sides)?', a:1080,
+      hint:'Interior angle sum = (n − 2) × 180°',
+      svg:svgPolygon(8,'octagon · 8 sides')},
+     {t:'num', lvl:'2.5', p:'What is the sum of the interior angles of a nonagon (9 sides)?', a:1260,
+      hint:'Interior angle sum = (n − 2) × 180°',
+      svg:svgPolygon(9,'nonagon · 9 sides')}
+   ]},
+  {id:'v8', emoji:'🔷', title:'Vault 8 · Regular Polygon Angles',
+   desc:'Crack it by finding ONE interior angle of a regular polygon.',
+   qs:[
+     {t:'num', lvl:'2.5', p:'A regular pentagon (5 sides) has 5 equal interior angles. What is the measure of each one?', a:108,
+      hint:'Find the total interior angle sum, then divide by the number of angles.',
+      svg:svgPolygon(5,'regular pentagon')},
+     {t:'num', lvl:'2.5', p:'A regular hexagon (6 sides) has 6 equal interior angles. What is the measure of each one?', a:120,
+      hint:'Find the total interior angle sum, then divide by the number of angles.',
+      svg:svgPolygon(6,'regular hexagon')},
+     {t:'num', lvl:'3.0', p:'A regular polygon has interior angles that each measure 144°. How many sides does it have?', a:10,
+      hint:'Find the exterior angle first (180 − 144), then divide 360 by that.'}
+   ]},
+  {id:'v9', emoji:'🧭', title:'Vault 9 · Polygon Exterior Angles',
+   desc:'Crack it using exterior angles of polygons.',
+   qs:[
+     {t:'num', lvl:'2.0', p:'What do the exterior angles of ANY convex polygon always add up to (in degrees)?', a:360},
+     {t:'num', lvl:'2.5', p:'A regular polygon has exterior angles of 40° each. How many sides does it have?', a:9,
+      hint:'360 ÷ (each exterior angle) = number of sides.'},
+     {t:'num', lvl:'3.0', p:'A regular polygon has interior angles of 156° each. How many sides does it have?', a:15,
+      hint:'Find the exterior angle first (180 − 156), then divide 360 by that.'}
+   ]},
+  {id:'v10', emoji:'🏆', title:'Vault 10 · Final Challenge',
+   desc:'Crack it — this one mixes everything you\'ve learned!',
+   qs:[
+     {t:'num', lvl:'3.5', p:"A polygon's interior angles add up to 1440°. How many sides does it have?", a:10,
+      hint:'Set (n − 2) × 180 = 1440 and solve for n.'},
+     {t:'num', lvl:'3.5', p:'A regular polygon has interior angles of 150° each. How many sides does it have?', a:12,
+      hint:'First find the exterior angle (180 − 150), then divide 360 by that.'},
+     {t:'num', lvl:'4.0', p:'In triangle ABC, line DE is drawn parallel to base BC, with D on side AB and E on side AC. The apex angle A measures 50°, and base angle B measures 65°. What is the measure of angle AED (where DE meets AC)?', a:65,
+      hint:'First find angle C (the other base angle). Since DE ∥ BC, angle AED corresponds to angle C.',
+      svg:svgApex('50°','65°','∠AED = ?')}
+   ]}
+];
+const BONUS = {id:'bonus', emoji:'🔮', title:'Bonus Vault · Sneak Peek',
+  desc:"Not on the test yet — just a preview of what's coming next!",
+  qs:[{t:'mc', p:'If two triangles have two pairs of congruent angles, the triangles are called ______ triangles.',
+       opts:['Congruent','Similar','Equal','Parallel'], a:'Similar'}]};
+
+let state = {stage:-1, startTime:null, vaultCorrect:{}, mcSel:{}};
+
+function fmtTime(ms){
+  const s = Math.floor(ms/1000);
+  return Math.floor(s/60)+':' + String(s%60).padStart(2,'0');
+}
+function bestTimeKey(){ return 'angleVaultBestTime'; }
+function getBest(){
+  try{ const v = localStorage.getItem(bestTimeKey()); return v?parseInt(v):null; }catch(e){ return null; }
+}
+function setBest(ms){
+  try{
+    const cur = getBest();
+    if(cur===null || ms<cur) localStorage.setItem(bestTimeKey(), String(ms));
+  }catch(e){}
+}
+
+function render(){
+  const app = document.getElementById('app');
+  if(state.stage===-1) return renderIntro(app);
+  if(state.stage < VAULTS.length) return renderVault(app, VAULTS[state.stage]);
+  if(state.stage===VAULTS.length) return renderComplete(app);
+  if(state.stage===VAULTS.length+1) return renderVault(app, BONUS, true);
+  return renderFinalBonus(app);
+}
+
+function renderIntro(app){
+  app.innerHTML = `
+    <h1>🔐 Escape the Angle Vault</h1>
+    <p class="sub">Ten vaults stand between you and freedom. Solve each angle challenge to crack the lock and move on. Make it to Vault 10 and you could win a prize!</p>
+    <div class="card center">
+      <div class="big-emoji">🗝️</div>
+      <p style="color:var(--muted);font-size:14px;">10 vaults · Triangle Angles → Transversals → Polygon Angles</p>
+      <input class="name-input" id="playerNameInput" type="text" placeholder="Your name (optional)">
+      <button class="start-btn" onclick="startGame()">Start the Escape</button>
+    </div>`;
+}
+
+function startGame(){
+  const nameEl = document.getElementById('playerNameInput');
+  const name = nameEl ? nameEl.value.trim() : '';
+  state = {stage:0, startTime:Date.now(), vaultCorrect:{}, mcSel:{}, playerName:name};
+  render();
+}
+
+function renderLocks(){
+  let html = '<div class="locks">';
+  VAULTS.forEach((v,i)=>{
+    const done = state.vaultCorrect[v.id];
+    const active = i===state.stage;
+    html += `<span class="lock ${done?'done':''} ${active?'active':''}">${done?'🔓':'🔒'}</span>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderVault(app, vault, isBonus){
+  const answered = state.vaultCorrect[vault.id]?.every(Boolean);
+  let qHtml = '';
+  vault.qs.forEach((q,i)=>{
+    const qid = vault.id+'_'+i;
+    const correct = (state.vaultCorrect[vault.id] || [])[i];
+    qHtml += `<div class="q">
+      ${q.lvl?`<span class="qlevel">Level ${q.lvl}</span>`:''}
+      ${q.svg?`<div class="qsvg">${q.svg}</div>`:''}
+      <div class="q-prompt">${i+1}. ${q.p}</div>
+      ${renderInput(vault,i,q,qid)}
+      <div id="fb_${qid}" class="fb ${correct?'ok':''}">${correct?'✓ Correct!':''}</div>
+      ${q.hint?`<button class="hint-btn" onclick="toggleHint('${qid}')">Need a hint?</button>
+      <div id="hint_${qid}" class="hint-text">${q.hint}</div>`:''}
+    </div>`;
+  });
+  app.innerHTML = `
+    ${isBonus?'':renderLocks()}
+    <div class="card">
+      <div class="vault-title">${vault.emoji} ${vault.title} ${isBonus?'<span class="bonus-tag">BONUS</span>':''}</div>
+      <div class="vault-desc">${vault.desc}</div>
+      ${qHtml}
+      <button class="continue-btn" id="cont_${vault.id}" ${allCorrect(vault)?'':'disabled'} onclick="advance()">
+        ${allCorrect(vault) ? (isBonus ? "That's everything — nice work! 🎉" : vault.emoji+' Vault Unlocked — Continue') : 'Answer every question to unlock'}
+      </button>
+    </div>`;
+}
+
+function renderInput(vault,i,q,qid){
+  if(q.t==='num'){
+    return `<input type="text" inputmode="numeric" id="in_${qid}" placeholder="Type your answer">
+      <div><button class="check-btn" onclick="checkNum('${vault.id}',${i},'${qid}')">Check</button></div>`;
+  }
+  let opts = q.opts.map(o=>{
+    const sel = state.mcSel[qid]===o;
+    return `<button class="mc-btn ${sel?'sel':''}" onclick="selectMc('${qid}','${o.replace(/'/g,"\\'")}')">${o}</button>`;
+  }).join('');
+  return `<div class="mc-row">${opts}</div>
+    <div><button class="check-btn" onclick="checkMc('${vault.id}',${i},'${qid}')">Check</button></div>`;
+}
+
+function allCorrect(vault){
+  const arr = state.vaultCorrect[vault.id];
+  return !!arr && arr.length===vault.qs.length && arr.every(Boolean);
+}
+
+function toggleHint(qid){
+  const el = document.getElementById('hint_'+qid);
+  el.style.display = el.style.display==='block' ? 'none' : 'block';
+}
+
+function selectMc(qid, val){
+  state.mcSel[qid]=val;
+  render();
+}
+
+function markCorrect(vaultId, i, ok, qid){
+  if(!state.vaultCorrect[vaultId]) state.vaultCorrect[vaultId]=[];
+  state.vaultCorrect[vaultId][i]=ok;
+  const fb = document.getElementById('fb_'+qid);
+  fb.textContent = ok ? '✓ Correct!' : '✗ Not quite — try again.';
+  fb.className = 'fb ' + (ok?'ok':'bad');
+  const btn = document.getElementById('cont_'+vaultId);
+  const vault = [...VAULTS, BONUS].find(v=>v.id===vaultId);
+  if(btn){
+    const done = allCorrect(vault);
+    btn.disabled = !done;
+    btn.textContent = done ? (vault===BONUS ? "That's everything — nice work! 🎉" : vault.emoji+' Vault Unlocked — Continue') : 'Answer every question to unlock';
+  }
+  if(allCorrect(vault)) renderLockBar();
+}
+
+function renderLockBar(){
+  const bar = document.querySelector('.locks');
+  if(bar) bar.outerHTML = renderLocks();
+}
+
+function checkNum(vaultId,i,qid){
+  const vault = [...VAULTS, BONUS].find(v=>v.id===vaultId);
+  const q = vault.qs[i];
+  const val = document.getElementById('in_'+qid).value.trim();
+  const ok = val !== '' && Number(val)===q.a;
+  markCorrect(vaultId,i,ok,qid);
+}
+function checkMc(vaultId,i,qid){
+  const vault = [...VAULTS, BONUS].find(v=>v.id===vaultId);
+  const q = vault.qs[i];
+  const sel = state.mcSel[qid];
+  const ok = sel===q.a;
+  markCorrect(vaultId,i,ok,qid);
+}
+
+function advance(){
+  state.stage++;
+  render();
+}
+
+function renderComplete(app){
+  const elapsed = Date.now()-state.startTime;
+  setBest(elapsed);
+  const best = getBest();
+  dropConfetti();
+  const name = state.playerName || '';
+  app.innerHTML = `
+    ${renderLocks()}
+    <div class="card center">
+      <div class="big-emoji">🏆</div>
+      <h1 style="margin-top:0;">You Escaped All 10 Vaults!</h1>
+      <p style="color:var(--muted);">${name ? name+', you' : 'You'} cracked every lock. Amazing review!</p>
+      <div class="prize">🎁 Show this screen to your teacher to claim your prize!</div>
+      <p class="timer">Your time: <strong>${fmtTime(elapsed)}</strong></p>
+      ${best?`<p class="timer">Best time on this device: <span class="best">${fmtTime(best)}</span></p>`:''}
+      <button class="continue-btn" onclick="advance()">🔮 Try the Bonus Vault</button>
+      <button class="restart-btn" onclick="startGame()">Play Again</button>
+    </div>`;
+}
+
+function renderFinalBonus(app){
+  app.innerHTML = `
+    <div class="card center">
+      <div class="big-emoji">⭐</div>
+      <h1 style="margin-top:0;">Bonus Complete!</h1>
+      <p style="color:var(--muted);">Similar triangles are coming soon in class — now you've got a head start.</p>
+      <button class="restart-btn" onclick="startGame()">Play Again</button>
+    </div>`;
+}
+
+function dropConfetti(){
+  const emojis = ['🎉','✨','🔑','⭐','🎊'];
+  for(let i=0;i<24;i++){
+    const el = document.createElement('div');
+    el.className='confetti';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100+'vw';
+    el.style.animationDuration = (2.2+Math.random()*1.6)+'s';
+    el.style.animationDelay = (Math.random()*0.6)+'s';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 4200);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
